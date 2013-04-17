@@ -24,6 +24,7 @@ Delete a movie:
     !delete title of movie
 
 How many movies are there?
+
     !stats
 
 License
