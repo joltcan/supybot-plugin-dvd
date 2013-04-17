@@ -12,11 +12,17 @@ Usage
 -----
 
 Get a random movie:
+
     !dvd
+
 Add a movie:
+
     !add title of the movie
+
 Delete a movie:
+
     !delete title of movie
+
 How many movies are there?
     !stats
 
