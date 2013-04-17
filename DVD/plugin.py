@@ -1,8 +1,10 @@
 # -*- coding: utf_8 -*-
 ###
-# Copyright (c) 2013, Fredrik Johansson
-# All rights reserved.
+#
 # Thanks to Knirch/wanders for the iso88591 function
+# and
+# thanks to http://submarinemovies.com, http://imdb.com, http://wikipedia.org
+# for the movies.
 #
 ###
 
@@ -13,7 +15,6 @@ import sqlite3
 
 mynick = 'jolt'
 
-# U-boat movies from http://submarinemovies.com
 dvds = (
     ('20,000 Leagues Under The Sea (1916)'),
     ('20,000 Leagues Under The Sea (1954)'),
@@ -56,6 +57,7 @@ dvds = (
     ('Hell Below (1933)'),
     ('Hellcats Of The Navy (1957)'),
     ('Hostile Waters (1997)'),
+    ('Hoch klingt das Lied von U-Boot-Mann (1917)'),
     ('Ice Station Zebra (1968)'),
     ('In Enemy Hands (2004)'),
     ('K-19 (2002)'),
@@ -137,26 +139,25 @@ class DVD(callbacks.Plugin):
         self.__parent = super(DVD, self)
         self.__parent.__init__(irc)
         self.db = 'data/dvd.db'
-
         conn = sqlite3.connect(self.db)
-
         with conn:
             cur = conn.cursor()
             try:
                 cur.execute("SELECT * FROM DVDs")
             except:
                 log.info('Error: could not query DB, creating a new one')
-                cur.execute('CREATE TABLE DVDs (id INTEGER PRIMARY KEY, title TEXT, nick TEXT)')
-
+                cur.execute('CREATE TABLE DVDs (id INTEGER PRIMARY KEY, '
+                            'title TEXT, nick TEXT)')
             data = cur.fetchone()
             if data is None:
                 log.info('Table is empty, adding stuff')
-                list = [[title, mynick] for title in dvds]
-                cur.executemany('insert INTO DVDs VALUES ((SELECT max(id) FROM DVDs)+1, ?, ?)', list)
+                dvdlist = [[title, mynick] for title in dvds]
+                cur.executemany('insert INTO DVDs VALUES '
+                                '((SELECT max(id) FROM DVDs)+1, ?, ?)',
+                                dvdlist)
 
     def _random(self):
         conn = sqlite3.connect(self.db)
-
         with conn:
             cur = conn.cursor()
             cur.execute("select * FROM DVDs ORDER BY random() LIMIT 1")
@@ -166,42 +167,35 @@ class DVD(callbacks.Plugin):
         # Swedish char's will crap stuff up.
         movie = iso88591(movie)
         movie = movie.decode('latin1')
-
         conn = sqlite3.connect(self.db)
-
         with conn:
             cur = conn.cursor()
-
             # do we have it already?
             cur.execute('select * from DVDs WHERE title LIKE ?', (movie,))
             data = cur.fetchone()
-
             if data is None:
                 try:
-                    cur.execute("insert into DVDs VALUES((SELECT max(id) FROM DVDs)+1, ?, ?)", (movie, msg.nick))
+                    cur.execute('insert into DVDs VALUES ('
+                                '(SELECT max(id) FROM DVDs)+1, ?, ?)',
+                                (movie, msg.nick))
                 except:
                     irc.reply(iso88591('Sorry, I couldn\'t add that movie.'))
                 irc.reply(iso88591("Ok."))
-
             else:
-                irc.reply(iso88591("Sorry, %s already added that one." % data[2]))
-
+                irc.reply(iso88591("Sorry, %s already added that one." %
+                                   data[2]))
     add = wrap(add, ['text'])
 
     def delete(self, irc, msg, args, movie):
         # Swedish char's will crap stuff up.
         movie = iso88591(movie)
         movie = movie.decode('latin1')
-
         conn = sqlite3.connect(self.db)
-
         with conn:
             cur = conn.cursor()
-
             # do we have it?
             cur.execute('select * from DVDs WHERE title LIKE ?', (movie,))
             data = cur.fetchone()
-
             if data is None:
                 irc.reply(iso88591('Sorry, couldn\'t find it in the DB.'))
             else:
@@ -209,19 +203,17 @@ class DVD(callbacks.Plugin):
                     cur.execute("delete from DVDs WHERE id=?", (data[0],))
                     irc.reply(iso88591("Ok."))
                 except:
-                    irc.reply(iso88591('Sorry, something went wrong when deleting.'))
-
+                    irc.reply(iso88591('Sorry, something went wrong when '
+                                       'deleting.'))
     delete = wrap(delete, ['text'])
 
     def stats(self, irc, msg, args):
         conn = sqlite3.connect(self.db)
-
         with conn:
             cur = conn.cursor()
             cur.execute('select count(id) from DVDs')
             data = cur.fetchone()
             irc.reply(iso88591('There are %s movies in the DB' % data))
-
     stats = wrap(stats)
 
 
