@@ -139,8 +139,8 @@ class DVD(callbacks.Plugin):
         self.__parent = super(DVD, self)
         self.__parent.__init__(irc)
         self.db = 'data/dvd.db'
-        conn = sqlite3.connect(self.db)
-        with conn:
+
+        with sqlite3.connect(self.db) as conn:
             cur = conn.cursor()
             try:
                 cur.execute("SELECT * FROM DVDs")
@@ -167,8 +167,7 @@ class DVD(callbacks.Plugin):
         # Swedish char's will crap stuff up.
         movie = iso88591(movie)
         movie = movie.decode('latin1')
-        conn = sqlite3.connect(self.db)
-        with conn:
+        with sqlite3.connect(self.db) as conn:
             cur = conn.cursor()
             # do we have it already?
             cur.execute('select * from DVDs WHERE title LIKE ?', (movie,))
@@ -190,8 +189,7 @@ class DVD(callbacks.Plugin):
         # Swedish char's will crap stuff up.
         movie = iso88591(movie)
         movie = movie.decode('latin1')
-        conn = sqlite3.connect(self.db)
-        with conn:
+        with sqlite3.connect(self.db) as conn:
             cur = conn.cursor()
             # do we have it?
             cur.execute('select * from DVDs WHERE title LIKE ?', (movie,))
@@ -208,8 +206,7 @@ class DVD(callbacks.Plugin):
     delete = wrap(delete, ['text'])
 
     def stats(self, irc, msg, args):
-        conn = sqlite3.connect(self.db)
-        with conn:
+        with sqlite3.connect(self.db) as conn:
             cur = conn.cursor()
             cur.execute('select count(id) from DVDs')
             data = cur.fetchone()
@@ -219,7 +216,6 @@ class DVD(callbacks.Plugin):
 
     def dvd(self, irc, msg, args):
         title = self._random()
-
         try:
             irc.reply(iso88591(title))
         except:
@@ -228,6 +224,5 @@ class DVD(callbacks.Plugin):
     dvd = wrap(dvd)
 
 Class = DVD
-
 
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:
